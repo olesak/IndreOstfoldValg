@@ -1,15 +1,15 @@
 library(purrr)
 
 MandaterIndre <- kommune_valg_indreOstfold %>%
-  filter(Kommunenavn == "Indre Østfold", År == 2015) %>%
-  select(Partinavn, Antall.stemmer.totalt) %>%
+  filter(Kommunenavn == "Indre", År == 2015, Partinavn != "Blanke") %>%
+  select(Partikode, Antall.stemmer.totalt) %>%
   mutate(Mandater = 0)
 
 head(MandaterIndre)
 
 j = c()
 ind <- 0
-for(i in 1:9) {
+for(i in 1:8) {
   k <- MandaterIndre[i,2]
   j <- append(j, k/1.4 )
 }
@@ -19,11 +19,11 @@ print(ind)
 print(j)
 
 m <- 0
-while( m <= 50){
+while( m <= 48){
   j = c()
   ind <- 0
   
-  for(i in 1:9) {
+  for(i in 1:8) {
     k <- MandaterIndre[i,2]
     l <- 2*MandaterIndre[i,3] + 1
     j <- append(j, k/l )

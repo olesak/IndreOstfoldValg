@@ -6,11 +6,11 @@ library(xtable)
 
 kable(stemmeandel)
 
-partifarger <- c("Arbeiderpartiet" = "#DC143C", "Askimpartiet" = "#ffe6ff", 
-                 "Blanke" = "#bfbfbf", "Fremskrittspartiet" = "#663300", "Høyre" = "#0066ff", 
-                 "Kristelig Folkeparti" = "#ffff1a", "Miljøpartiet De Grønne" = "#66ff33", 
-                 "Senterpartiet" = "#00cc00", "Sosialistisk Venstreparti" = "#e60000", 
-                 "Venstre" = "#336600")
+partifarger <- c("A" = "#DC143C", "ASKIMP" = "#ffe6ff", 
+                 "BLANKEe" = "#bfbfbf", "FRP" = "#663300", "H" = "#0066ff", 
+                 "KRF" = "#ffff1a", "MDG" = "#66ff33", 
+                 "SP" = "#00cc00", "SV" = "#e60000", 
+                 "V" = "#336600")
 
 andel_stemte <- ggplot(stemmeandel, aes(Kommunenavn, Andel_som_stemte, fill = Kommunenavn)) +
   geom_bar(stat = "identity", position =  "dodge") +
@@ -23,12 +23,12 @@ ggplotly(andel_stemte)
 kable(kommune_valg_indreOstfold)
 
 OppslutningAlle <- kommune_valg_indreOstfold %>%
-  filter(Kommunenavn != "Indre Østfold") %>%
+  filter(Kommunenavn != "Indre") %>%
   arrange(År)
 
 kable(OppslutningAlle)
 
-OppslutningAlle <- ggplot(OppslutningAlle, aes(Partinavn, Oppslutning.prosentvis, fill = Partinavn)) +
+OppslutningAlleViz <- ggplot(OppslutningAlle, aes(Partikode, Oppslutning.prosentvis, fill = Partikode)) +
   geom_bar(stat = "identity", position =  "dodge") +
   facet_grid(Kommunenavn ~ År) +
   scale_y_continuous(limits =c(0, 80)) +
@@ -37,15 +37,15 @@ OppslutningAlle <- ggplot(OppslutningAlle, aes(Partinavn, Oppslutning.prosentvis
   xlab("Parti") +
   scale_fill_manual(values = partifarger)
 
-ggplotly(OppslutningAlle)
+ggplotly(OppslutningAlleViz)
 
 OppslutningIndre <- kommune_valg_indreOstfold %>%
-  filter(Kommunenavn == "Indre Østfold") %>%
+  filter(Kommunenavn == "Indre") %>%
   arrange(År)
 
 kable(OppslutningIndre)
 
-OppslutningIndre <- ggplot(OppslutningIndre, aes(Partinavn, Oppslutning.prosentvis, fill = Partinavn)) +
+OppslutningIndreViz <- ggplot(OppslutningIndre, aes(Partikode, Oppslutning.prosentvis, fill = Partikode)) +
   geom_bar(stat = "identity", position =  "dodge") +
   facet_grid(Kommunenavn ~ År) +
   scale_y_continuous(limits =c(0, 80)) +
@@ -54,4 +54,15 @@ OppslutningIndre <- ggplot(OppslutningIndre, aes(Partinavn, Oppslutning.prosentv
   xlab("Parti") +
   scale_fill_manual(values = partifarger)
 
-ggplotly(OppslutningIndre)
+ggplotly(OppslutningIndreViz)
+
+MandaterIndreviz <- ggplot(MandaterIndre, aes(Partikode, Mandater, fill = Partikode)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_y_continuous(limits =c(0, 50)) +
+  theme_bw() +
+  ylab("Antall representanter i kommunestyret") +
+  xlab("Parti") +
+  scale_fill_manual(values = partifarger)
+
+ggplotly(MandaterIndreviz)
+
