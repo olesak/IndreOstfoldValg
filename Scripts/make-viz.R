@@ -1,3 +1,11 @@
+# install.packages("ggplot22")
+# install.packages("plotly")
+# install.packages("knitr")
+# install.packages("DT")
+# install.packages("xtable")
+
+
+
 library(ggplot2)
 library(plotly)
 library(knitr)
@@ -7,7 +15,7 @@ library(xtable)
 kable(stemmeandel)
 
 partifarger <- c("A" = "#DC143C", "ASKIMP" = "#ffe6ff", 
-                 "BLANKEe" = "#bfbfbf", "FRP" = "#663300", "H" = "#0066ff", 
+                 "BLANKE" = "#bfbfbf", "FRP" = "#663300", "H" = "#0066ff", 
                  "KRF" = "#ffff1a", "MDG" = "#66ff33", 
                  "SP" = "#00cc00", "SV" = "#e60000", 
                  "V" = "#336600")
@@ -47,7 +55,7 @@ kable(OppslutningIndre)
 
 OppslutningIndreViz <- ggplot(OppslutningIndre, aes(Partikode, Oppslutning.prosentvis, fill = Partikode)) +
   geom_bar(stat = "identity", position =  "dodge") +
-  facet_grid(Kommunenavn ~ År) +
+  facet_grid(~År) +
   scale_y_continuous(limits =c(0, 80)) +
   theme_bw() +
   ylab("Prosentvis oppslutning") +
