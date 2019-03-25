@@ -1,0 +1,203 @@
+---
+title: "Valg 2019 Indre Østfold"
+author: "Ole Kristian Saksberg"
+date: "22 mars 2019"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(plotly)
+library(knitr)
+library(DT)
+library(xtable)
+
+
+fordeling_2015 <- read.csv("Data/Partifordeling2015.csv", sep = ";", stringsAsFactors = FALSE )
+fordeling_2015 <- fordeling_2015 %>%
+  filter(Kommunenavn %in% c("Spydeberg", "Askim", "HobÃ¸l", "Eidsberg", "TrÃ¸gstad")) %>%
+  select(Kommunenavn, Partinavn, Partikode, Oppslutning.prosentvis, Antall.stemmeberettigede, Antall.stemmer.totalt) %>%
+  mutate(Year = 2015, Totalt_ant_stemmer_Indre = sum(Antall.stemmer.totalt))
+
+fordeling_2015$Oppslutning.prosentvis <- gsub(",", ".", fordeling_2015$Oppslutning.prosentvis)
+
+fordeling_2015 <- mutate(fordeling_2015, Oppslutning.prosentvis = as.double(Oppslutning.prosentvis))
+
+Indre2015 <- fordeling_2015 %>%
+  group_by(Partinavn, Partikode) %>%
+  summarize(Oppslutning.prosentvis = (sum(Antall.stemmer.totalt, na.rm = TRUE)/unique(Totalt_ant_stemmer_Indre))*100,
+            Antall.stemmer.totalt = sum(Antall.stemmer.totalt, na.rm = TRUE)) %>%
+            mutate(Kommunenavn = "Indre", Year = 2015, Antall.stemmeberettigede = 33872)
+
+fordeling_2015 <- merge(fordeling_2015, Indre2015, all = TRUE)
+ 
+
+
+fordeling_2011 <- read.csv("Data/Partifordeling2011.csv", sep = ";", stringsAsFactors = FALSE )
+fordeling_2011 <- fordeling_2011 %>%
+  filter(Kommunenavn %in% c("Spydeberg", "Askim", "HobÃ¸l", "Eidsberg", "TrÃ¸gstad")) %>%
+  select(Kommunenavn, Partinavn, Partikode, Oppslutning.prosentvis, Antall.stemmeberettigede, Antall.stemmer.totalt) %>%
+  mutate(Year = 2011, Totalt_ant_stemmer_Indre = sum(Antall.stemmer.totalt))
+
+fordeling_2011$Oppslutning.prosentvis <- gsub(",", ".", fordeling_2011$Oppslutning.prosentvis)
+
+fordeling_2011 <- mutate(fordeling_2011, Oppslutning.prosentvis = as.double(Oppslutning.prosentvis))
+fordeling_2011$Partinavn <- gsub("Det norske Arbeiderparti", "Arbeiderpartiet", fordeling_2011$Partinavn)
+
+Indre2011 <- fordeling_2011 %>%
+  group_by(Partinavn, Partikode) %>%
+  summarize(Oppslutning.prosentvis = (sum(Antall.stemmer.totalt, na.rm = TRUE)/unique(Totalt_ant_stemmer_Indre))*100,
+            Antall.stemmer.totalt = sum(Antall.stemmer.totalt, na.rm = TRUE)) %>%
+  mutate(Kommunenavn = "Indre", Year = 2011, Antall.stemmeberettigede = 31919)
+
+fordeling_2011 <- merge(fordeling_2011, Indre2011, all = TRUE)
+
+kommune_valg_indreOstfold <- merge(fordeling_2011, fordeling_2015, all = TRUE)
+
+rm(fordeling_2011, fordeling_2015, Indre2011, Indre2015)
+
+kommune_valg_indreOstfold$Partinavn <- gsub("HÃ¸yre", "Høyre", kommune_valg_indreOstfold$Partinavn) 
+kommune_valg_indreOstfold$Partinavn <- gsub("MiljÃ¸partiet De GrÃ¸nne", "Miljøpartiet De Grønne", kommune_valg_indreOstfold$Partinavn)
+kommune_valg_indreOstfold$Kommunenavn <- gsub("TrÃ¸gstad", "Trøgstad", kommune_valg_indreOstfold$Kommunenavn)
+kommune_valg_indreOstfold$Kommunenavn <- gsub("HobÃ¸l", "Hobøl", kommune_valg_indreOstfold$Kommunenavn)
+kommune_valg_indreOstfold$Partikode <- gsub("ASKIMP", "ASP", kommune_valg_indreOstfold$Partikode)
+kommune_valg_indreOstfold$Partikode <- gsub("BLANKE", "BL", kommune_valg_indreOstfold$Partikode)
+
+kommune_valg_indreOstfold <- kommune_valg_indreOstfold %>%
+  select(Kommunenavn, År = Year, everything())
+
+stemmeandel <- kommune_valg_indreOstfold %>%
+  group_by(Kommunenavn, År) %>%
+  summarize(Andel_som_stemte = (sum(Antall.stemmer.totalt) / sum(unique(Antall.stemmeberettigede)))*100,
+            Antall_stemmer = sum(Antall.stemmer.totalt),
+            Antall.stemmeberettigede = sum(unique(Antall.stemmeberettigede)))
+
+```
+
+## Valg i Indre Østfold kommune 2019
+
+Dette er et forsøk på å belyse den politiske situasjonen i nye **Indre Østfold kommune**. Jeg har hentet tall fra  <https://valgresultat.no/>.
+
+Jeg har brukt tallene fra de siste kommunevalgene og sett på hva valgrresultatet ville blitt hvis de 5 kommunen: **Askim**, **Eidsberg**,**Hobøl**, **Spydeberg**, **Trøgstad** hadde vært en en kommune.
+
+#Andel som stemmer#
+
+```{r echo = FALSE, message = FALSE, warning = FALSE, message = FALSE, include = FALSE}
+partifarger <- c("A" = "#DC143C", "ASP" = "#ffe6ff", 
+                 "BL" = "#bfbfbf", "FRP" = "#663300", "H" = "#0066ff", 
+                 "KRF" = "#ffff1a", "MDG" = "#66ff33", 
+                 "SP" = "#00cc00", "SV" = "#e60000", 
+                 "V" = "#336600")
+```
+```{r echo = FALSE, message = FALSE, warning = FALSE, message = FALSE}
+andel_stemte <- ggplot(stemmeandel, aes(Kommunenavn, Andel_som_stemte, fill = Kommunenavn)) +
+  geom_bar(stat = "identity", position =  "dodge") +
+  scale_y_continuous(limits = c(0,80)) +
+  facet_grid(~År) +
+  theme_bw()
+
+print(andel_stemte)
+```
+
+```{r}
+kable(stemmeandel)
+```
+
+## Valgresultat fordelt på kommune
+
+
+```{r echo=FALSE}
+OppslutningAlle <- kommune_valg_indreOstfold %>%
+  filter(Kommunenavn != "Indre") %>%
+  arrange(År)
+
+#kable(OppslutningAlle)
+
+OppslutningAlleViz <- ggplot(OppslutningAlle, aes(Partikode, Oppslutning.prosentvis, fill = Partikode)) +
+  geom_bar(stat = "identity", position =  "dodge") +
+  facet_grid(Kommunenavn ~ År) +
+  scale_y_continuous(limits =c(0, 80)) +
+  theme_bw() +
+  ylab("Prosentvis oppslutning") +
+  xlab("Parti") +
+  scale_fill_manual(values = partifarger)
+```
+```{r echo=FALSE}
+print(OppslutningAlleViz)
+```
+
+#Valgresultat i Indre Østfold kommune
+
+```{r echo = FALSE}
+OppslutningIndre <- kommune_valg_indreOstfold %>%
+  filter(Kommunenavn == "Indre") %>%
+  arrange(År)
+
+kable(OppslutningIndre)
+```
+
+```{r echo=FALSE}
+OppslutningIndreViz <- ggplot(OppslutningIndre, aes(Partikode, Oppslutning.prosentvis, fill = Partikode)) +
+  geom_bar(stat = "identity", position =  "dodge") +
+  facet_grid(Kommunenavn ~ År) +
+  scale_y_continuous(limits =c(0, 80)) +
+  theme_bw() +
+  theme(strip.text.x = element_text(size = 12) ) +
+  ylab("Prosentvis oppslutning") +
+  xlab("Parti") +
+  scale_fill_manual(values = partifarger)
+
+print(OppslutningIndreViz)
+```
+
+#Antall mandater hvis representanter = 50
+
+```{r echo=FALSE}
+MandaterIndre <- kommune_valg_indreOstfold %>%
+  filter(Kommunenavn == "Indre", År == 2015, Partinavn != "Blanke") %>%
+  select(Partikode, Antall.stemmer.totalt) %>%
+  mutate(Mandater = 0)
+
+
+j = c()
+ind <- 0
+for(i in 1:8) {
+  k <- MandaterIndre[i,2]
+  j <- append(j, k/1.4 )
+}
+ind <- j[] == max(j)
+MandaterIndre[ind,3] <- MandaterIndre[ind,3] +1
+
+m <- 0
+while( m <= 48){
+  j = c()
+  ind <- 0
+  
+  for(i in 1:8) {
+    k <- MandaterIndre[i,2]
+    l <- 2*MandaterIndre[i,3] + 1
+    j <- append(j, k/l )
+    
+  }
+  ind <- j[] == max(j)
+  
+  MandaterIndre[ind,3] <- MandaterIndre[ind,3] +1
+  m <- m + 1
+  print(j)
+}
+
+MandaterIndre <- MandaterIndre %>% arrange(desc(Mandater))
+
+
+
+kable(MandaterIndre)
+```
+
+Høyre, FrP, Venstre og Krf vil tilsammen få 27 mandater. De rødgrønne får 23.
